@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Luau Studio Pro - Trình Tạo Script Studio & Hub</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts: Outfit & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Prism.js Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandDark: '#07080B',
+                        brandPanel: '#0E1017',
+                        brandCard: '#151821',
+                        brandBorder: '#222634',
+                        cyanNeon: '#00F0FF',
+                        purpleNeon: '#8A2BE2',
+                        pinkNeon: '#FF007F',
+                        greenNeon: '#00FF66',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 20px rgba(0, 240, 255, 0.3)',
+                        'neon-purple': '0 0 20px rgba(138, 43, 226, 0.3)',
+                        'neon-pink': '0 0 20px rgba(255, 0, 127, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #07080B; }
+        ::-webkit-scrollbar-thumb { background: #222634; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
+
+        .glass-panel {
+            background: rgba(14, 16, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(21, 24, 33, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        pre[class*="language-"] {
+            margin: 0 !important;
+            padding: 1.25rem !important;
+            background: #0B0D12 !important;
+            border-radius: 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .gradient-text-cyan {
+            background: linear-gradient(135deg, #00F0FF 0%, #7000FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-text-pink {
+            background: linear-gradient(135deg, #FF007F 0%, #8A2BE2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-brandDark text-gray-100 font-sans min-h-screen flex flex-col selection:bg-cyanNeon selection:text-black">
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-all duration-300 ease-out glass-panel px-5 py-3.5 rounded-xl border border-cyanNeon/40 text-white shadow-neon-cyan flex items-center space-x-3 pointer-events-none">
+        <i id="toast-icon" class="fas fa-check-circle text-cyanNeon text-lg"></i>
+        <div>
+            <h4 id="toast-title" class="font-bold text-xs uppercase tracking-wider text-cyanNeon">Thông Báo</h4>
+            <p id="toast-msg" class="text-sm font-medium text-gray-200">Thao tác thành công!</p>
+        </div>
+    </div>
+
+    <!-- Header Bar -->
+    <header class="glass-panel sticky top-0 z-40 border-b border-brandBorder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyanNeon via-purpleNeon to-pinkNeon p-[2px] shadow-neon-cyan">
+                    <div class="w-full h-full bg-brandDark rounded-[10px] flex items-center justify-center">
+                        <i class="fas fa-cube text-cyanNeon text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-extrabold text-lg tracking-wider text-white">LUAU<span class="gradient-text-cyan">STUDIO</span></span>
+                        <span class="text-[10px] bg-cyanNeon/10 text-cyanNeon border border-cyanNeon/30 font-mono px-2 py-0.5 rounded-full uppercase">PRO v3.0</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400">Trình Tạo Script & Thư Viện Luau Roblox Tất Cả Trong Một</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="btn-copy-header" class="glass-card hover:bg-brandCard text-xs font-semibold px-3.5 py-2 rounded-lg border border-brandBorder hover:border-cyanNeon/50 text-gray-200 hover:text-cyanNeon transition flex items-center space-x-2">
+                    <i class="fas fa-copy text-cyanNeon"></i>
+                    <span class="hidden sm:inline">Sao Chép</span>
+                </button>
+                <button id="btn-download-header" class="bg-gradient-to-r from-cyanNeon to-blue-600 hover:from-cyanNeon/90 hover:to-blue-500 text-black font-bold text-xs px-4 py-2 rounded-lg shadow-neon-cyan transition flex items-center space-x-2">
+                    <i class="fas fa-download"></i>
+                    <span class="hidden sm:inline">Tải File .lua</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-6">
+
+        <!-- Left Column: Navigation Tabs & Control Panels -->
+        <div class="w-full lg:w-1/2 flex flex-col space-y-5">
+
+            <!-- Tab Buttons -->
+            <div class="grid grid-cols-5 gap-1 p-1.5 glass-panel rounded-2xl border border-brandBorder">
+                <button id="tab-btn-hub" class="tab-btn active py-2.5 px-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1.5 bg-gradient-to-r from-cyanNeon/20 to-purpleNeon/20 text-cyanNeon border border-cyanNeon/40 shadow-neon-cyan">
+                    <i class="fas fa-search"></i>
+                    <span>Script Hub</span>
+                </button>
+                <button id="tab-btn-ai" class="tab-btn py-2.5 px-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                    <i class="fas fa-wand-magic-sparkles text-pinkNeon"></i>
+                    <span>AI Studio</span>
+                </button>
+                <button id="tab-btn-custom" class="tab-btn py-2.5 px-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Tùy Chỉnh</span>
+                </button>
+                <button id="tab-btn-presets" class="tab-btn py-2.5 px-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                    <i class="fas fa-bolt"></i>
+                    <span>Cơ Chế</span>
+                </button>
+                <button id="tab-btn-docs" class="tab-btn py-2.5 px-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                    <i class="fas fa-book"></i>
+                    <span>Tra Cứu</span>
+                </button>
+            </div>
+
+            <!-- SECTION 1: SCRIPT HUB & REALTIME SEARCH -->
+            <div id="panel-hub" class="tab-panel glass-panel rounded-2xl p-5 border border-brandBorder flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-database text-cyanNeon"></i> Thư Viện Script Roblox Hub
+                        </h2>
+                        <span id="hub-count-badge" class="text-[10px] bg-cyanNeon/10 text-cyanNeon px-2 py-0.5 rounded border border-cyanNeon/30 font-mono">12 Scripts Available</span>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400 text-xs"></i>
+                        <input type="text" id="hub-search-input" placeholder="Tìm kiếm script (ESP, Fly, Autofarm, Hitbox, Admin, Money...)" class="w-full bg-brandDark border border-brandBorder rounded-xl pl-10 pr-24 py-2.5 text-xs text-white focus:outline-none focus:border-cyanNeon transition">
+                        <button id="btn-search-ai" class="absolute right-1.5 top-1.5 bottom-1.5 bg-gradient-to-r from-cyanNeon to-blue-600 text-black font-bold text-[11px] px-3 rounded-lg shadow-neon-cyan hover:opacity-90 transition flex items-center gap-1">
+                            <i class="fas fa-brain text-[10px]"></i> AI Search
+                        </button>
+                    </div>
+
+                    <!-- Category Filter Badges -->
+                    <div class="flex flex-wrap gap-1.5" id="category-filter-container">
+                        <button data-category="all" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-cyanNeon bg-cyanNeon/20 text-cyanNeon transition">Tất Cả</button>
+                        <button data-category="admin" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition">Admin</button>
+                        <button data-category="combat" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition">Combat</button>
+                        <button data-category="movement" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition">Di Chuyển</button>
+                        <button data-category="autofarm" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition">Autofarm</button>
+                        <button data-category="visual" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition">Visual/ESP</button>
+                        <button data-category="economy" class="cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition">Kinh Tế</button>
+                    </div>
+
+                    <!-- Script Cards Container -->
+                    <div id="hub-cards-container" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+                        <!-- Cards dynamically rendered here -->
+                    </div>
+
+                    <!-- AI Fallback Prompt Banner when search has 0 results -->
+                    <div id="hub-ai-banner" class="hidden glass-card p-4 rounded-xl border border-pinkNeon/40 bg-pinkNeon/5 text-center space-y-2">
+                        <p class="text-xs text-gray-300">Không tìm thấy script khớp sẵn có trong thư viện?</p>
+                        <button id="btn-hub-generate-ai" class="py-2 px-4 rounded-lg text-xs font-bold bg-gradient-to-r from-pinkNeon to-purpleNeon text-white shadow-neon-pink transition flex items-center justify-center gap-2 mx-auto">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            <span id="ai-banner-btn-text">Tạo Script AI Cho Từ Khóa Này</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: AI LUAU STUDIO GENERATOR -->
+            <div id="panel-ai" class="tab-panel hidden glass-panel rounded-2xl p-5 border border-brandBorder flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="fas fa-brain text-pinkNeon"></i> AI Generator (Gemini 3 Flash)
+                        </h2>
+                        <span class="text-[10px] bg-greenNeon/10 text-greenNeon border border-greenNeon/30 px-2 py-0.5 rounded font-mono flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-greenNeon animate-ping"></span> Live AI Ready
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-gray-400">Nhập ý tưởng game bằng tiếng Việt hoặc tiếng Anh. AI sẽ tự động lập trình và tạo ra mã nguồn Roblox Luau chuẩn xác.</p>
+
+                    <!-- Quick Prompt Suggestions -->
+                    <div class="space-y-1.5">
+                        <span class="text-[11px] font-semibold text-gray-400">Gợi ý prompt nhanh:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button class="ai-prompt-chip text-[11px] glass-card hover:bg-brandCard text-cyanNeon px-2.5 py-1 rounded-lg border border-cyanNeon/30 transition">🛍️ Shop Mua Vũ Khí Leaderstats</button>
+                            <button class="ai-prompt-chip text-[11px] glass-card hover:bg-brandCard text-purpleNeon px-2.5 py-1 rounded-lg border border-purpleNeon/30 transition">🎒 Inventory Lưu DataStore</button>
+                            <button class="ai-prompt-chip text-[11px] glass-card hover:bg-brandCard text-pinkNeon px-2.5 py-1 rounded-lg border border-pinkNeon/30 transition">👾 Boss AI Tự Đuổi Theo Đánh</button>
+                            <button class="ai-prompt-chip text-[11px] glass-card hover:bg-brandCard text-greenNeon px-2.5 py-1 rounded-lg border border-greenNeon/30 transition">📜 Hệ Thống Quest Nhiệm Vụ</button>
+                        </div>
+                    </div>
+
+                    <!-- Prompt Input Area -->
+                    <textarea id="ai-prompt-input" rows="4" class="w-full bg-brandDark border border-brandBorder rounded-xl p-3 text-xs text-white focus:outline-none focus:border-pinkNeon placeholder-gray-500 font-sans resize-none" placeholder="Ví dụ: Tạo hệ thống Rebirth khi đủ 1000 Coins sẽ Reset lại điểm nhưng nhân hệ số tiền x2 vĩnh viễn..."></textarea>
+                </div>
+
+                <button id="btn-generate-ai" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-pinkNeon via-purpleNeon to-indigo-600 text-white shadow-neon-pink hover:opacity-95 transition flex items-center justify-center space-x-2">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    <span>TẠO SCRIPT BẰNG AI</span>
+                </button>
+            </div>
+
+            <!-- SECTION 3: CUSTOM SCRIPT BUILDER -->
+            <div id="panel-custom" class="tab-panel hidden glass-panel rounded-2xl p-5 border border-brandBorder flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-4">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-sliders-h text-purpleNeon"></i> Tùy Chỉnh Thông Số Script
+                    </h2>
+
+                    <!-- Script Type Target -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-300 block mb-2">Loại Script Target:</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="glass-card p-2.5 rounded-xl border border-brandBorder flex flex-col items-center justify-center cursor-pointer hover:border-cyanNeon/50 transition">
+                                <input type="radio" name="customScriptType" value="Server" checked class="hidden peer">
+                                <i class="fas fa-server text-cyanNeon mb-1"></i>
+                                <span class="text-[11px] font-bold text-gray-300 peer-checked:text-cyanNeon">Server Script</span>
+                            </label>
+                            <label class="glass-card p-2.5 rounded-xl border border-brandBorder flex flex-col items-center justify-center cursor-pointer hover:border-cyanNeon/50 transition">
+                                <input type="radio" name="customScriptType" value="Local" class="hidden peer">
+                                <i class="fas fa-desktop text-purpleNeon mb-1"></i>
+                                <span class="text-[11px] font-bold text-gray-300 peer-checked:text-purpleNeon">LocalScript</span>
+                            </label>
+                            <label class="glass-card p-2.5 rounded-xl border border-brandBorder flex flex-col items-center justify-center cursor-pointer hover:border-cyanNeon/50 transition">
+                                <input type="radio" name="customScriptType" value="Module" class="hidden peer">
+                                <i class="fas fa-cubes text-pinkNeon mb-1"></i>
+                                <span class="text-[11px] font-bold text-gray-300 peer-checked:text-pinkNeon">ModuleScript</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Config Sliders & Inputs -->
+                    <div class="space-y-3 glass-card p-4 rounded-xl border border-brandBorder">
+                        <div>
+                            <label class="text-xs font-semibold text-gray-300 block mb-1">Tên Script / Module:</label>
+                            <input type="text" id="custom-name" value="CustomMechanicModule" class="w-full bg-brandDark border border-brandBorder rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-cyanNeon">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-300 block mb-1">WalkSpeed: <span id="val-speed" class="text-cyanNeon font-mono">32</span></label>
+                                <input type="range" id="slider-speed" min="16" max="200" value="32" class="w-full accent-cyanNeon">
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-300 block mb-1">JumpPower: <span id="val-jump" class="text-purpleNeon font-mono">100</span></label>
+                                <input type="range" id="slider-jump" min="50" max="300" value="100" class="w-full accent-purpleNeon">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-semibold text-gray-300 block mb-1">Phím Tắt Kích Hoạt (Keybind - LocalScript):</label>
+                            <select id="custom-keybind" class="w-full bg-brandDark border border-brandBorder rounded-lg p-2 text-xs text-white">
+                                <option value="Enum.KeyCode.E">Phím E</option>
+                                <option value="Enum.KeyCode.F">Phím F</option>
+                                <option value="Enum.KeyCode.Q">Phím Q</option>
+                                <option value="Enum.KeyCode.LeftShift">Shift Trái</option>
+                                <option value="Enum.KeyCode.Space">Dấu Cách (Space)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-generate-custom" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-purpleNeon to-pinkNeon text-white shadow-neon-purple hover:opacity-95 transition flex items-center justify-center space-x-2">
+                    <i class="fas fa-cogs"></i>
+                    <span>TẠO SCRIPT TÙY CHỈNH</span>
+                </button>
+            </div>
+
+            <!-- SECTION 4: PRESET MECHANICS -->
+            <div id="panel-presets" class="tab-panel hidden glass-panel rounded-2xl p-5 border border-brandBorder flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-4">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-bolt text-cyanNeon"></i> Chọn Cơ Chế Mẫu
+                    </h2>
+
+                    <!-- Preset Category Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button data-pcat="movement" class="preset-cat-btn p-2 text-xs font-semibold rounded-lg glass-card border border-cyanNeon text-cyanNeon text-center">Di Chuyển</button>
+                        <button data-pcat="logic" class="preset-cat-btn p-2 text-xs font-semibold rounded-lg glass-card border border-brandBorder text-gray-400 hover:text-white text-center">Logic Server</button>
+                        <button data-pcat="ui" class="preset-cat-btn p-2 text-xs font-semibold rounded-lg glass-card border border-brandBorder text-gray-400 hover:text-white text-center">Giao Diện GUI</button>
+                        <button data-pcat="tools" class="preset-cat-btn p-2 text-xs font-semibold rounded-lg glass-card border border-brandBorder text-gray-400 hover:text-white text-center">Vũ Khí/Vật Phẩm</button>
+                    </div>
+
+                    <!-- Preset Selector Dropdown -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-300 block mb-1">Chọn Mẫu Kịch Bản:</label>
+                        <select id="preset-selector" class="w-full bg-brandDark border border-brandBorder rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyanNeon">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Parameters for selected preset -->
+                    <div id="preset-inputs-container" class="space-y-2 glass-card p-3 rounded-xl border border-brandBorder">
+                        <!-- Inputs inserted via JS -->
+                    </div>
+                </div>
+
+                <button id="btn-generate-preset" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-cyanNeon to-blue-600 text-black shadow-neon-cyan hover:opacity-95 transition flex items-center justify-center space-x-2">
+                    <i class="fas fa-code"></i>
+                    <span>XUẤT MÃ MẪU LUAU</span>
+                </button>
+            </div>
+
+            <!-- SECTION 5: API CHEAT SHEET & QUICK REFERENCE -->
+            <div id="panel-docs" class="tab-panel hidden glass-panel rounded-2xl p-5 border border-brandBorder flex-1 flex flex-col justify-between space-y-4">
+                <div class="space-y-3">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-book-open text-cyanNeon"></i> Thư Viện API Luau Tra Cứu Nhanh
+                    </h2>
+
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-500 text-xs"></i>
+                        <input type="text" id="docs-search-input" placeholder="Tìm kiếm Service, Event, Function..." class="w-full bg-brandDark border border-brandBorder rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-cyanNeon">
+                    </div>
+
+                    <div id="docs-list-container" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                        <!-- Items rendered via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- GLOBAL OUTPUT WRAPPER OPTIONS -->
+            <div class="glass-panel rounded-2xl p-4 border border-brandBorder flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center space-x-4">
+                    <label class="flex items-center cursor-pointer text-gray-300 hover:text-white">
+                        <input type="checkbox" id="opt-comments" checked class="rounded bg-brandDark border-brandBorder text-cyanNeon focus:ring-0">
+                        <span class="ml-2 font-medium">Thêm Chú Thích (Comments)</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer text-gray-300 hover:text-white">
+                        <input type="checkbox" id="opt-debug" checked class="rounded bg-brandDark border-brandBorder text-cyanNeon focus:ring-0">
+                        <span class="ml-2 font-medium">Log Debug (print)</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer text-gray-300 hover:text-white">
+                        <input type="checkbox" id="opt-pcall" checked class="rounded bg-brandDark border-brandBorder text-cyanNeon focus:ring-0">
+                        <span class="ml-2 font-medium">Bao Bọc pcall (Bẫy Lỗi)</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Interactive Code Editor Workspace -->
+        <div class="w-full lg:w-1/2 flex flex-col min-h-[550px]">
+            <div class="glass-panel rounded-2xl border border-brandBorder flex flex-col flex-1 shadow-2xl overflow-hidden">
+                
+                <!-- Editor Top Header -->
+                <div class="bg-brandDark/90 px-4 py-3 border-b border-brandBorder flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex space-x-1.5">
+                            <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+                        </div>
+                        <span id="script-type-badge" class="text-xs font-mono font-bold text-cyanNeon bg-cyanNeon/10 px-2.5 py-0.5 rounded border border-cyanNeon/30">
+                            ServerScript.lua
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button id="btn-copy-editor" title="Sao Chép Code" class="p-1.5 text-gray-400 hover:text-cyanNeon hover:bg-brandCard rounded-lg transition">
+                            <i class="fas fa-copy text-sm"></i>
+                        </button>
+                        <button id="btn-download-editor" title="Tải Về File .lua" class="p-1.5 text-gray-400 hover:text-cyanNeon hover:bg-brandCard rounded-lg transition">
+                            <i class="fas fa-download text-sm"></i>
+                        </button>
+                        <button id="btn-clear-editor" title="Xóa Trắng" class="p-1.5 text-gray-400 hover:text-pinkNeon hover:bg-brandCard rounded-lg transition">
+                            <i class="fas fa-trash-alt text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Code Display Area -->
+                <div class="relative flex-1 bg-[#0B0D12] overflow-auto">
+                    
+                    <!-- AI Loading Overlay -->
+                    <div id="ai-loading-overlay" class="hidden absolute inset-0 bg-brandDark/90 backdrop-blur-md z-30 flex flex-col items-center justify-center space-y-4">
+                        <div class="relative w-12 h-12">
+                            <div class="w-12 h-12 rounded-full border-4 border-pinkNeon/30 border-t-pinkNeon animate-spin"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <i class="fas fa-brain text-pinkNeon text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="text-sm font-bold text-pinkNeon font-mono animate-pulse">GEMINI AI ĐANG SOẠN THẢO...</h4>
+                            <p class="text-xs text-gray-400 mt-1">Đang tối ưu hóa cú pháp Luau & Roblox API</p>
+                        </div>
+                    </div>
+
+                    <!-- Code Output -->
+                    <pre><code id="code-output" class="language-lua">-- Chọn một script từ Hub hoặc nhập yêu cầu để AI tạo code...</code></pre>
+                </div>
+
+                <!-- Editor Footer Metadata -->
+                <div class="bg-brandDark/90 px-4 py-2.5 border-t border-brandBorder flex items-center justify-between text-[11px] font-mono text-gray-400">
+                    <div class="flex items-center space-x-4">
+                        <span class="flex items-center gap-1.5"><i class="fas fa-code-branch text-cyanNeon"></i> Luau 5.1</span>
+                        <span id="line-counter">1 Dòng Code</span>
+                    </div>
+                    <span class="text-gray-500">Sẵn sàng dán vào Roblox Studio Explorer</span>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-brandBorder py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500">
+            Roblox Luau Studio Pro • Tối Ưu Cho Workspace & StarterPlayer Engine
+        </div>
+    </footer>
+
+    <!-- MAIN JAVASCRIPT APP ENGINE -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- STATE MANAGEMENT ---
+            let currentTab = 'hub';
+            let currentCategory = 'all';
+            let currentPresetCat = 'movement';
+            let currentGeneratedCode = '-- Chọn một script từ Hub hoặc nhập yêu cầu để AI tạo code...';
+
+            // --- Gemini API Configuration ---
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            // --- SCRIPT HUB DATABASE (12 Prebuilt Scripts) ---
+            const scriptHubDB = [
+                {
+                    id: 'hub-admin-fly',
+                    title: 'Fly Admin Command System',
+                    category: 'admin',
+                    type: 'LocalScript',
+                    tags: ['Admin', 'Fly', 'Movement'],
+                    desc: 'Hệ thống bay bằng phím E với vận tốc tùy chỉnh mượt mà.',
+                    code: `-- [ROBLOX LUAU] LocalScript: Fly Admin System
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local flying = false
+local speed = 60
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.E then
+        flying = not flying
+        local character = LocalPlayer.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            if flying then
+                local bv = Instance.new("BodyVelocity")
+                bv.Name = "FlyVelocity"
+                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                bv.Velocity = hrp.CFrame.LookVector * speed
+                bv.Parent = hrp
+                print("[ADMIN] Fly Mode: ON")
+            else
+                local bv = hrp:FindFirstChild("FlyVelocity")
+                if bv then bv:Destroy() end
+                print("[ADMIN] Fly Mode: OFF")
+            end
+        end
+    end
+end)`
+                },
+                {
+                    id: 'hub-esp-highlight',
+                    title: 'ESP Highlight Người Chơi',
+                    category: 'visual',
+                    type: 'LocalScript',
+                    tags: ['ESP', 'Visual', 'PvP'],
+                    desc: 'Hiển thị viền Highlight xuyên tường cho toàn bộ người chơi trong Server.',
+                    code: `-- [ROBLOX LUAU] LocalScript: Player ESP Highlight
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function createESP(player)
+    if player == LocalPlayer then return end
+    local function applyHighlight(character)
+        if not character:FindFirstChild("ESPHighlight") then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "ESPHighlight"
+            highlight.FillColor = Color3.fromRGB(0, 240, 255)
+            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            highlight.FillTransparency = 0.5
+            highlight.Parent = character
+        end
+    end
+    player.CharacterAdded:Connect(applyHighlight)
+    if player.Character then applyHighlight(player.Character) end
+end
+
+for _, p in ipairs(Players:GetPlayers()) do createESP(p) end
+Players.PlayerAdded:Connect(createESP)`
+                },
+                {
+                    id: 'hub-hitbox-expander',
+                    title: 'Mở Rộng Hitbox Địch (Hitbox Expander)',
+                    category: 'combat',
+                    type: 'LocalScript',
+                    tags: ['Combat', 'Hitbox', 'PvP'],
+                    desc: 'Phóng to HumanoidRootPart của kẻ địch giúp đánh / bắn trúng dễ dàng.',
+                    code: `-- [ROBLOX LUAU] LocalScript: Hitbox Expander
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local size = Vector3.new(10, 10, 10)
+
+task.spawn(function()
+    while task.wait(1) do
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                hrp.Size = size
+                hrp.Transparency = 0.7
+                hrp.BrickColor = BrickColor.new("Cyan")
+                hrp.Material = Enum.Material.Neon
+                hrp.CanCollide = false
+            end
+        end
+    end
+end)`
+                },
+                {
+                    id: 'hub-infinite-jump',
+                    title: 'Nhảy Vô Hạn (Infinite Jump)',
+                    category: 'movement',
+                    type: 'LocalScript',
+                    tags: ['Movement', 'Jump', 'Fly'],
+                    desc: 'Cho phép nhân vật liên tục nhảy trên không trung không giới hạn.',
+                    code: `-- [ROBLOX LUAU] LocalScript: Infinite Jump
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+UserInputService.JumpRequest:Connect(function()
+    if LocalPlayer.Character then
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+print("[MOVEMENT] Infinite Jump đã được kích hoạt!")`
+                },
+                {
+                    id: 'hub-noclip',
+                    title: 'Xuyên Tường Vĩnh Viễn (Noclip Mode)',
+                    category: 'movement',
+                    type: 'LocalScript',
+                    tags: ['Noclip', 'Movement'],
+                    desc: 'Tắt va chạm (CanCollide) nhân vật để tự do đi xuyên qua các vật thể.',
+                    code: `-- [ROBLOX LUAU] LocalScript: Noclip Mode
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local noclip = true
+
+RunService.Stepped:Connect(function()
+    if noclip and LocalPlayer.Character then
+        for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+print("[NOCLIP] Chế độ Noclip xuyên tường đã BẬT!")`
+                },
+                {
+                    id: 'hub-autofarm-base',
+                    title: 'Khung Khởi Tạo AutoFarm Core',
+                    category: 'autofarm',
+                    type: 'LocalScript',
+                    tags: ['Autofarm', 'Simulator', 'Loop'],
+                    desc: 'Vòng lặp nhặt coin/clicker tự động tối ưu không gây giật lag client.',
+                    code: `-- [ROBLOX LUAU] LocalScript: AutoFarm Core Framework
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local _G_AutoFarm = true
+
+task.spawn(function()
+    while _G_AutoFarm do
+        task.wait(0.1)
+        pcall(function()
+            local remote = ReplicatedStorage:FindFirstChild("ClickEvent") or ReplicatedStorage:FindFirstChild("CollectCoin")
+            if remote and remote:IsA("RemoteEvent") then
+                remote:FireServer()
+            end
+        end)
+    end
+end)
+print("[AUTOFARM] Vòng lặp AutoFarm đã sẵn sàng!")`
+                },
+                {
+                    id: 'hub-leaderstats-datastore',
+                    title: 'Leaderstats + DataStore Lưu Tiền',
+                    category: 'economy',
+                    type: 'ServerScript',
+                    tags: ['Leaderstats', 'DataStore', 'Server'],
+                    desc: 'Tạo Coins/Gems và tự động lưu/tải dữ liệu khi người chơi vào/ra game.',
+                    code: `-- [ROBLOX LUAU] ServerScript: Leaderstats with DataStore
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+local coinStore = DataStoreService:GetDataStore("CoinDataStore_v2")
+
+Players.PlayerAdded:Connect(function(player)
+    local leaderstats = Instance.new("Folder")
+    leaderstats.Name = "leaderstats"
+    leaderstats.Parent = player
+
+    local coins = Instance.new("IntValue")
+    coins.Name = "Coins"
+    coins.Parent = leaderstats
+
+    local data
+    pcall(function()
+        data = coinStore:GetAsync(player.UserId)
+    end)
+    coins.Value = data or 100
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if player:FindFirstChild("leaderstats") and player.leaderstats:FindFirstChild("Coins") then
+        pcall(function()
+            coinStore:SetAsync(player.UserId, player.leaderstats.Coins.Value)
+        end)
+    end
+end)`
+                },
+                {
+                    id: 'hub-speed-jump-gui',
+                    title: 'Speed & Jump Custom GUI Hub',
+                    category: 'movement',
+                    type: 'LocalScript',
+                    tags: ['GUI', 'Movement', 'Utility'],
+                    desc: 'Bảng điều khiển GUI chỉnh tốc độ chạy và sức nhảy trực quan.',
+                    code: `-- [ROBLOX LUAU] LocalScript: Speed & Jump Custom GUI
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SpeedJumpHub"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 220, 0, 140)
+Frame.Position = UDim2.new(0.05, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(14, 16, 23)
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "SPEED & JUMP HUB"
+Title.TextColor3 = Color3.fromRGB(0, 240, 255)
+Title.BackgroundColor3 = Color3.fromRGB(22, 26, 36)
+Title.Parent = Frame
+
+print("[GUI] Đã tạo thành công Speed & Jump GUI!")`
+                },
+                {
+                    id: 'hub-kill-brick',
+                    title: 'Kill Brick (Bẫy Chết Người)',
+                    category: 'admin',
+                    type: 'ServerScript',
+                    tags: ['Trap', 'Kill', 'Server'],
+                    desc: 'Đặt vào Part bẫy để tiêu diệt ngay lập tức nhân vật nào chạm vào.',
+                    code: `-- [ROBLOX LUAU] ServerScript: Kill Brick Trap
+local part = script.Parent
+
+part.Touched:Connect(function(hit)
+    local character = hit.Parent
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.Health = 0
+        print("[TRAP] " .. character.Name .. " đã chạm vào Kill Brick!")
+    end
+end)`
+                },
+                {
+                    id: 'hub-teleport-pad',
+                    title: 'Pad Dịch Chuyển Tọa Độ',
+                    category: 'movement',
+                    type: 'ServerScript',
+                    tags: ['Teleport', 'Pad', 'Movement'],
+                    desc: 'Dịch chuyển nhân vật đến vị trí tọa độ Vector3 chỉ định khi dẫm lên Pad.',
+                    code: `-- [ROBLOX LUAU] ServerScript: Teleport Pad
+local pad = script.Parent
+local targetCFrame = CFrame.new(0, 50, 0)
+local cooldown = false
+
+pad.Touched:Connect(function(hit)
+    if cooldown then return end
+    local character = hit.Parent
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        cooldown = true
+        hrp.CFrame = targetCFrame
+        print("[TELEPORT] Đã dịch chuyển thành công " .. character.Name)
+        task.wait(1)
+        cooldown = false
+    end
+end)`
+                },
+                {
+                    id: 'hub-click-cash',
+                    title: 'Clicker Thưởng Tiền (Cash Giver)',
+                    category: 'economy',
+                    type: 'ServerScript',
+                    tags: ['Clicker', 'Money', 'Economy'],
+                    desc: 'Cộng tiền cho người chơi mỗi khi bấm vào Part ClickDetector.',
+                    code: `-- [ROBLOX LUAU] ServerScript: Clicker Cash Giver
+local clickDetector = script.Parent:WaitForChild("ClickDetector")
+local rewardAmount = 25
+
+clickDetector.MouseClick:Connect(function(player)
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        local coins = leaderstats:FindFirstChild("Coins")
+        if coins then
+            coins.Value = coins.Value + rewardAmount
+            print("[CASH] + " .. rewardAmount .. " Coins cho " .. player.Name)
+        end
+    end
+end)`
+                },
+                {
+                    id: 'hub-tool-spawner',
+                    title: 'Tool Spawner Nhận Vũ Khí',
+                    category: 'combat',
+                    type: 'ServerScript',
+                    tags: ['Tool', 'Weapon', 'Inventory'],
+                    desc: 'Sao chép vũ khí từ ServerStorage vào Backpack của người chơi khi tương tác.',
+                    code: `-- [ROBLOX LUAU] ServerScript: Tool Spawner
+local ServerStorage = game:GetService("ServerStorage")
+local pad = script.Parent
+local toolName = "Sword" -- Tên vũ khí trong ServerStorage
+
+pad.Touched:Connect(function(hit)
+    local character = hit.Parent
+    local player = game.Players:GetPlayerFromCharacter(character)
+    if player then
+        local backpack = player:FindFirstChild("Backpack")
+        local tool = ServerStorage:FindFirstChild(toolName)
+        if backpack and tool and not backpack:FindFirstChild(toolName) then
+            tool:Clone().Parent = backpack
+            print("[ITEM] Đã trao " .. toolName .. " cho " .. player.Name)
+        end
+    end
+end)`
+                }
+            ];
+
+            // --- PRESET DATABASE ---
+            const presetsDB = {
+                movement: [
+                    { id: 'speedJump', name: 'Tăng Tốc Độ & Độ Nhảy', type: 'LocalScript' },
+                    { id: 'fly', name: 'Cơ Chế Bay Phím E', type: 'LocalScript' },
+                    { id: 'infiniteJump', name: 'Nhảy Vô Hạn', type: 'LocalScript' }
+                ],
+                logic: [
+                    { id: 'leaderstats', name: 'Bảng Điểm Leaderstats', type: 'ServerScript' },
+                    { id: 'killBrick', name: 'Kill Brick Bẫy', type: 'ServerScript' },
+                    { id: 'teleportPad', name: 'Pad Dịch Chuyển', type: 'ServerScript' }
+                ],
+                ui: [
+                    { id: 'simpleGui', name: 'Khung Giao Diện ScreenGui', type: 'LocalScript' }
+                ],
+                tools: [
+                    { id: 'toolSpawner', name: 'Trao Vũ Khí Tool', type: 'ServerScript' }
+                ]
+            };
+
+            // --- DOCS CHEAT SHEET DATABASE ---
+            const docsDB = [
+                { code: 'game:GetService("Players")', desc: 'Lấy Service quản lý người chơi trong game.' },
+                { code: 'game:GetService("RunService")', desc: 'Quản lý vòng lặp frame (RenderStepped, Heartbeat, Stepped).' },
+                { code: 'game:GetService("DataStoreService")', desc: 'Lưu trữ và tải dữ liệu người chơi lên Server Roblox.' },
+                { code: 'Instance.new("Part")', desc: 'Khởi tạo một đối tượng/object mới bằng code.' },
+                { code: 'task.wait(1)', desc: 'Tạm dừng thực thi script chuẩn xác theo giây.' },
+                { code: 'pcall(function() ... end)', desc: 'Bẫy lỗi bảo vệ script không bị đứt đoạn khi gọi API ngoài.' }
+            ];
+
+            // --- INITIALIZATION ---
+            renderHubCards();
+            renderDocsList();
+            populatePresetDropdown('movement');
+            updatePresetInputs();
+
+            // --- TAB SWITCHER LOGIC ---
+            function switchTab(tabName) {
+                currentTab = tabName;
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.id === `tab-btn-${tabName}`) {
+                        btn.className = "tab-btn active py-2.5 px-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1.5 bg-gradient-to-r from-cyanNeon/20 to-purpleNeon/20 text-cyanNeon border border-cyanNeon/40 shadow-neon-cyan";
+                    } else {
+                        btn.className = "tab-btn py-2.5 px-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition flex flex-col sm:flex-row items-center justify-center gap-1.5";
+                    }
+                });
+
+                document.querySelectorAll('.tab-panel').forEach(panel => {
+                    if (panel.id === `panel-${tabName}`) {
+                        panel.classList.remove('hidden');
+                    } else {
+                        panel.classList.add('hidden');
+                    }
+                });
+            }
+
+            document.getElementById('tab-btn-hub').addEventListener('click', () => switchTab('hub'));
+            document.getElementById('tab-btn-ai').addEventListener('click', () => switchTab('ai'));
+            document.getElementById('tab-btn-custom').addEventListener('click', () => switchTab('custom'));
+            document.getElementById('tab-btn-presets').addEventListener('click', () => switchTab('presets'));
+            document.getElementById('tab-btn-docs').addEventListener('click', () => switchTab('docs'));
+
+            // --- SCRIPT HUB RENDER & SEARCH ---
+            function renderHubCards(scriptsToRender = scriptHubDB) {
+                const container = document.getElementById('hub-cards-container');
+                container.innerHTML = '';
+
+                scriptsToRender.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "glass-card p-3 rounded-xl border border-brandBorder hover:border-cyanNeon/50 transition flex flex-col justify-between space-y-2";
+                    const typeColor = item.type === 'ServerScript' ? 'text-cyanNeon bg-cyanNeon/10 border-cyanNeon/30' : 'text-purpleNeon bg-purpleNeon/10 border-purpleNeon/30';
+
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-xs font-bold text-white hover:text-cyanNeon cursor-pointer btn-use-script" data-id="${item.id}">${item.title}</h3>
+                                    <span class="text-[9px] font-mono px-1.5 py-0.5 rounded border ${typeColor}">${item.type}</span>
+                                </div>
+                                <p class="text-[11px] text-gray-400 mt-1 line-clamp-2">${item.desc}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-1 border-t border-brandBorder/40">
+                            <div class="flex flex-wrap gap-1">
+                                ${item.tags.map(t => `<span class="text-[9px] bg-brandDark text-gray-400 px-1.5 py-0.5 rounded border border-brandBorder">#${t}</span>`).join('')}
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <button class="btn-use-script text-[11px] font-semibold bg-cyanNeon/10 hover:bg-cyanNeon/20 text-cyanNeon border border-cyanNeon/40 px-2.5 py-1 rounded-lg transition flex items-center gap-1" data-id="${item.id}">
+                                    <i class="fas fa-code"></i> Dùng Script
+                                </button>
+                                <button class="btn-edit-ai text-[11px] bg-pinkNeon/10 hover:bg-pinkNeon/20 text-pinkNeon border border-pinkNeon/30 p-1.5 rounded-lg transition" data-id="${item.id}" title="Sửa bằng AI">
+                                    <i class="fas fa-wand-magic-sparkles"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                document.getElementById('hub-count-badge').innerText = `${scriptsToRender.length} Scripts Found`;
+
+                // Attach Event Listeners
+                document.querySelectorAll('.btn-use-script').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.currentTarget.getAttribute('data-id');
+                        const target = scriptHubDB.find(s => s.id === id);
+                        if (target) {
+                            renderCodeOutput(target.code, `${target.type}.lua`);
+                            showToast(`Đã tải script: ${target.title}`, "success");
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.btn-edit-ai').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.currentTarget.getAttribute('data-id');
+                        const target = scriptHubDB.find(s => s.id === id);
+                        if (target) {
+                            switchTab('ai');
+                            document.getElementById('ai-prompt-input').value = `Nâng cấp và cải tiến đoạn script "${target.title}" sau đây:\n\n${target.code}`;
+                        }
+                    });
+                });
+            }
+
+            function filterHubScripts() {
+                const query = document.getElementById('hub-search-input').value.toLowerCase().trim();
+                const banner = document.getElementById('hub-ai-banner');
+
+                const filtered = scriptHubDB.filter(item => {
+                    const matchesCategory = currentCategory === 'all' || item.category === currentCategory;
+                    const matchesQuery = item.title.toLowerCase().includes(query) ||
+                                         item.desc.toLowerCase().includes(query) ||
+                                         item.tags.some(t => t.toLowerCase().includes(query));
+                    return matchesCategory && matchesQuery;
+                });
+
+                renderHubCards(filtered);
+
+                if (filtered.length === 0 && query.length > 0) {
+                    banner.classList.remove('hidden');
+                    document.getElementById('ai-banner-btn-text').innerText = `Tạo Script AI Cho Từ Khóa: "${query}"`;
+                } else {
+                    banner.classList.add('hidden');
+                }
+            }
+
+            document.getElementById('hub-search-input').addEventListener('input', filterHubScripts);
+
+            // Category Filter Buttons
+            document.querySelectorAll('.cat-filter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentCategory = e.currentTarget.getAttribute('data-category');
+                    document.querySelectorAll('.cat-filter').forEach(b => {
+                        if (b.getAttribute('data-category') === currentCategory) {
+                            b.className = "cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-cyanNeon bg-cyanNeon/20 text-cyanNeon transition";
+                        } else {
+                            b.className = "cat-filter text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-brandBorder text-gray-400 hover:text-white transition";
+                        }
+                    });
+                    filterHubScripts();
+                });
+            });
+
+            // AI Search Button Actions
+            const triggerAiFromSearch = () => {
+                const query = document.getElementById('hub-search-input').value.trim();
+                if (!query) {
+                    showToast("Vui lòng nhập từ khóa để tìm kiếm hoặc tạo AI!", "error");
+                    return;
+                }
+                switchTab('ai');
+                document.getElementById('ai-prompt-input').value = `Tạo một script Luau Roblox hoàn chỉnh cho tính năng: "${query}". Viết chú thích chi tiết bằng tiếng Việt.`;
+                generateScriptWithAI();
+            };
+
+            document.getElementById('btn-search-ai').addEventListener('click', triggerAiFromSearch);
+            document.getElementById('btn-hub-generate-ai').addEventListener('click', triggerAiFromSearch);
+
+            // AI Prompt Chips
+            document.querySelectorAll('.ai-prompt-chip').forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    document.getElementById('ai-prompt-input').value = e.target.innerText.replace(/^[^\s]+\s/, '');
+                });
+            });
+
+            // --- GEMINI AI GENERATOR WITH OFFLINE FALLBACK ENGINE ---
+            async function generateScriptWithAI() {
+                const promptInput = document.getElementById('ai-prompt-input').value.trim();
+                if (!promptInput) {
+                    showToast("Vui lòng nhập nội dung yêu cầu kịch bản!", "error");
+                    return;
+                }
+
+                const loadingOverlay = document.getElementById('ai-loading-overlay');
+                loadingOverlay.classList.remove('hidden');
+
+                const systemPrompt = `Bạn là chuyên gia lập trình Roblox Luau hàng đầu.
+Nhiệm vụ: Tạo ra Roblox Luau script hoàn chỉnh theo đúng yêu cầu.
+Quy tắc bắt buộc:
+1. Trả về CODE LUAU NGUYÊN BẢN trong khối markdown \`\`\`lua, không kèm giải thích bên ngoài.
+2. Thêm ghi chú chú thích chi tiết bằng tiếng Việt trong code (-- chú thích).
+3. Sử dụng API Roblox Luau mới nhất (task.wait, game:GetService, DataStoreService, UserInputService).
+4. Dòng đầu tiên trong code phải chứa comment ghi rõ loại Script (ServerScript / LocalScript / ModuleScript).`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: promptInput }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        let resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (resultText) {
+                            resultText = resultText.replace(/```lua/g, '').replace(/```luau/g, '').replace(/```/g, '').trim();
+                            renderCodeOutput(resultText, "AI_GeneratedScript.lua");
+                            showToast("AI đã tạo kịch bản Luau thành công!", "success");
+                            loadingOverlay.classList.add('hidden');
+                            return;
+                        }
+                    }
+                    throw new Error("Sử dụng trình sinh Template offline fallback...");
+
+                } catch (err) {
+                    console.warn("AI Endpoint Fallback Triggered:", err);
+                    
+                    // Offline Fallback Template Generator
+                    const fallbackCode = `-- [ROBLOX LUAU] LocalScript / ServerScript: ${promptInput.slice(0, 30)}...
+-- [THÔNG BÁO]: Kịch bản được tạo bằng Trình Sinh Mã Mẫu Tối Ưu Offline
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+print("[AI ENGINE] Đang khởi tạo hệ thống cho: ${promptInput.replace(/"/g, '')}")
+
+-- Khung xử lý chính
+local function initializeSystem()
+    local success, err = pcall(function()
+        -- Logic điều khiển kịch bản Roblox Studio
+        print("[SUCCESS] Hệ thống đã sẵn sàng hoạt động!")
+    end)
+    
+    if not success then
+        warn("[ERROR] Xảy ra lỗi khi chạy kịch bản: " .. tostring(err))
+    end
+end
+
+initializeSystem()`;
+
+                    renderCodeOutput(fallbackCode, "AI_OfflineScript.lua");
+                    showToast("Đã xuất mẫu script tối ưu (Offline Mode)!", "success");
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+
+            document.getElementById('btn-generate-ai').addEventListener('click', generateScriptWithAI);
+
+            // --- CUSTOM BUILDER SLIDERS & LOGIC ---
+            const speedSlider = document.getElementById('slider-speed');
+            const jumpSlider = document.getElementById('slider-jump');
+
+            speedSlider.addEventListener('input', (e) => {
+                document.getElementById('val-speed').innerText = e.target.value;
+            });
+
+            jumpSlider.addEventListener('input', (e) => {
+                document.getElementById('val-jump').innerText = e.target.value;
+            });
+
+            document.getElementById('btn-generate-custom').addEventListener('click', () => {
+                const scriptType = document.querySelector('input[name="customScriptType"]:checked').value;
+                const name = document.getElementById('custom-name').value || "CustomScript";
+                const speed = speedSlider.value;
+                const jump = jumpSlider.value;
+                const keybind = document.getElementById('custom-keybind').value;
+
+                const comments = document.getElementById('opt-comments').checked;
+                const debug = document.getElementById('opt-debug').checked;
+
+                let code = "";
+                let ext = `${scriptType}Script.lua`;
+
+                if (scriptType === 'Module') {
+                    code = `${comments ? `-- [ROBLOX LUAU] ModuleScript: ${name}\n` : ''}local ${name} = {}
+
+function ${name}.GetConfig()
+    return {
+        WalkSpeed = ${speed},
+        JumpPower = ${jump}
+    }
+end
+
+function ${name}.Init()
+    ${debug ? `print("[DEBUG] ${name} Module Script đã sẵn sàng!")` : ''}
+end
+
+return ${name}`;
+                } else {
+                    code = `${comments ? `-- [ROBLOX LUAU] ${scriptType}Script: ${name}\n` : ''}local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local function applyParameters(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = ${speed}
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = ${jump}
+        ${debug ? `print("[DEBUG] Cập nhật WalkSpeed = " .. ${speed} .. ", JumpPower = " .. ${jump})` : ''}
+    end
+end
+
+${scriptType === 'Local' ? 
+`UserInputService.InputBegan:Connect(function(input, gpe)
+    if not gpe and input.KeyCode == ${keybind} then
+        local player = Players.LocalPlayer
+        if player.Character then applyParameters(player.Character) end
+    end
+end)` : 
+`Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(applyParameters)
+end)`}`;
+                }
+
+                renderCodeOutput(code, ext);
+                showToast("Đã tạo Custom Script thành công!", "success");
+            });
+
+            // --- PRESET CATEGORY & DROPDOWN ---
+            function populatePresetDropdown(cat) {
+                const select = document.getElementById('preset-selector');
+                select.innerHTML = '';
+                presetsDB[cat].forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item.id;
+                    opt.textContent = `${item.name} (${item.type})`;
+                    select.appendChild(opt);
+                });
+            }
+
+            document.querySelectorAll('.preset-cat-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentPresetCat = e.target.getAttribute('data-pcat');
+                    document.querySelectorAll('.preset-cat-btn').forEach(b => {
+                        if (b.getAttribute('data-pcat') === currentPresetCat) {
+                            b.className = "preset-cat-btn p-2 text-xs font-semibold rounded-lg glass-card border border-cyanNeon text-cyanNeon text-center";
+                        } else {
+                            b.className = "preset-cat-btn p-2 text-xs font-semibold rounded-lg glass-card border border-brandBorder text-gray-400 hover:text-white text-center";
+                        }
+                    });
+                    populatePresetDropdown(currentPresetCat);
+                    updatePresetInputs();
+                });
+            });
+
+            function updatePresetInputs() {
+                const selectedId = document.getElementById('preset-selector').value;
+                const container = document.getElementById('preset-inputs-container');
+                container.innerHTML = '';
+
+                if (selectedId === 'speedJump') {
+                    container.innerHTML = `
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[11px] text-gray-300">Tốc Độ (WalkSpeed):</label>
+                                <input type="number" id="preset-speed" value="50" class="w-full bg-brandDark border border-brandBorder rounded-lg p-2 text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-300">Sức Nhảy (JumpPower):</label>
+                                <input type="number" id="preset-jump" value="120" class="w-full bg-brandDark border border-brandBorder rounded-lg p-2 text-xs text-white">
+                            </div>
+                        </div>
+                    `;
+                } else if (selectedId === 'leaderstats') {
+                    container.innerHTML = `
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[11px] text-gray-300">Tên Tiền 1:</label>
+                                <input type="text" id="preset-c1" value="Coins" class="w-full bg-brandDark border border-brandBorder rounded-lg p-2 text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-gray-300">Tên Tiền 2:</label>
+                                <input type="text" id="preset-c2" value="Gems" class="w-full bg-brandDark border border-brandBorder rounded-lg p-2 text-xs text-white">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `<p class="text-[11px] text-gray-400 italic">Mẫu cơ chế tiêu chuẩn đã tích hợp sẵn thông số tối ưu.</p>`;
+                }
+            }
+
+            document.getElementById('preset-selector').addEventListener('change', updatePresetInputs);
+
+            document.getElementById('btn-generate-preset').addEventListener('click', () => {
+                const selectedId = document.getElementById('preset-selector').value;
+                const comments = document.getElementById('opt-comments').checked;
+                const debug = document.getElementById('opt-debug').checked;
+
+                let code = "";
+                let typeName = "LocalScript.lua";
+
+                if (selectedId === 'speedJump') {
+                    const sp = document.getElementById('preset-speed')?.value || 50;
+                    const jp = document.getElementById('preset-jump')?.value || 120;
+                    code = `${comments ? '-- [ROBLOX LUAU] LocalScript: Buff Speed & Jump Power\n' : ''}local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function apply(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = ${sp}
+        humanoid.UseJumpPower = true
+        humanoid.JumpPower = ${jp}
+        ${debug ? 'print("[DEBUG] Speed & Jump Buff Executed!")' : ''}
+    end
+end
+
+if LocalPlayer.Character then apply(LocalPlayer.Character) end
+LocalPlayer.CharacterAdded:Connect(apply)`;
+                } else if (selectedId === 'leaderstats') {
+                    const c1 = document.getElementById('preset-c1')?.value || "Coins";
+                    const c2 = document.getElementById('preset-c2')?.value || "Gems";
+                    typeName = "ServerScript.lua";
+                    code = `${comments ? '-- [ROBLOX LUAU] ServerScript: Leaderstats Creator\n' : ''}local Players = game:GetService("Players")
+
+Players.PlayerAdded:Connect(function(player)
+    local leaderstats = Instance.new("Folder")
+    leaderstats.Name = "leaderstats"
+    leaderstats.Parent = player
+
+    local val1 = Instance.new("IntValue")
+    val1.Name = "${c1}"
+    val1.Value = 100
+    val1.Parent = leaderstats
+
+    local val2 = Instance.new("IntValue")
+    val2.Name = "${c2}"
+    val2.Value = 10
+    val2.Parent = leaderstats
+
+    ${debug ? 'print("[DEBUG] Leaderstats initialized for " .. player.Name)' : ''}
+end)`;
+                } else {
+                    code = `${comments ? '-- [ROBLOX LUAU] Preset Utility Engine\n' : ''}print("Roblox Studio Preset Executed")`;
+                }
+
+                renderCodeOutput(code, typeName);
+                showToast("Đã xuất mã cơ chế thành công!", "success");
+            });
+
+            // --- DOCS RENDER & SEARCH ---
+            function renderDocsList() {
+                const container = document.getElementById('docs-list-container');
+                container.innerHTML = '';
+                docsDB.forEach(doc => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-item glass-card p-2.5 rounded-xl border border-brandBorder hover:border-cyanNeon/50 transition';
+                    card.innerHTML = `
+                        <code class="text-xs font-mono font-bold text-cyanNeon">${doc.code}</code>
+                        <p class="text-[11px] text-gray-400 mt-1">${doc.desc}</p>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            document.getElementById('docs-search-input').addEventListener('input', (e) => {
+                const q = e.target.value.toLowerCase();
+                document.querySelectorAll('.doc-item').forEach(item => {
+                    if (item.innerText.toLowerCase().includes(q)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+
+            // --- CODE EDITOR RENDERER ---
+            function renderCodeOutput(codeText, badgeText = "Script.lua") {
+                currentGeneratedCode = codeText;
+                const codeEl = document.getElementById('code-output');
+                const badgeEl = document.getElementById('script-type-badge');
+
+                badgeEl.innerText = badgeText;
+                codeEl.textContent = codeText;
+
+                Prism.highlightElement(codeEl);
+
+                const lineCount = codeText.split('\n').length;
+                document.getElementById('line-counter').innerText = `${lineCount} Dòng Code`;
+            }
+
+            // --- COPY & DOWNLOAD ACTIONS ---
+            function copyCodeToClipboard() {
+                if (!currentGeneratedCode) {
+                    showToast("Không có mã code để sao chép!", "error");
+                    return;
+                }
+                const textarea = document.createElement('textarea');
+                textarea.value = currentGeneratedCode;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                showToast("Đã sao chép mã code vào Clipboard!", "success");
+            }
+
+            function downloadLuaFile() {
+                if (!currentGeneratedCode) {
+                    showToast("Không có mã code để tải về!", "error");
+                    return;
+                }
+                const blob = new Blob([currentGeneratedCode], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `RobloxScript_${Date.now()}.lua`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast("Đã tải tập tin .lua thành công!", "success");
+            }
+
+            document.getElementById('btn-copy-header').addEventListener('click', copyCodeToClipboard);
+            document.getElementById('btn-copy-editor').addEventListener('click', copyCodeToClipboard);
+            document.getElementById('btn-download-header').addEventListener('click', downloadLuaFile);
+            document.getElementById('btn-download-editor').addEventListener('click', downloadLuaFile);
+
+            document.getElementById('btn-clear-editor').addEventListener('click', () => {
+                renderCodeOutput('-- Editor cleared', 'Empty.lua');
+                showToast("Đã xóa trắng khung soạn thảo!", "success");
+            });
+
+            // --- TOAST SYSTEM ---
+            function showToast(message, type = "success") {
+                const toast = document.getElementById('toast');
+                const toastMsg = document.getElementById('toast-msg');
+                const toastTitle = document.getElementById('toast-title');
+                const toastIcon = document.getElementById('toast-icon');
+
+                toastMsg.innerText = message;
+
+                if (type === "success") {
+                    toastTitle.innerText = "THÀNH CÔNG";
+                    toastTitle.className = "font-bold text-xs uppercase tracking-wider text-cyanNeon";
+                    toastIcon.className = "fas fa-check-circle text-cyanNeon text-lg";
+                    toast.style.borderColor = "rgba(0, 240, 255, 0.4)";
+                } else {
+                    toastTitle.innerText = "THÔNG BÁO";
+                    toastTitle.className = "font-bold text-xs uppercase tracking-wider text-pinkNeon";
+                    toastIcon.className = "fas fa-exclamation-triangle text-pinkNeon text-lg";
+                    toast.style.borderColor = "rgba(255, 0, 127, 0.4)";
+                }
+
+                toast.classList.remove('translate-x-full');
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full');
+                }, 2800);
+            }
+        });
+    </script>
+</body>
+</html>
